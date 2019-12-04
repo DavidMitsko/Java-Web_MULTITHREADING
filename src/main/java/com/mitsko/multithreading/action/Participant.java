@@ -28,10 +28,8 @@ public class Participant implements Runnable {
                 lot = auction.getLot(auction.getIndex());
                 if (random()) {
                     makeBet();
-                    Thread.sleep(2000);
-                } else {
-                    Thread.sleep(2000);
                 }
+                Thread.sleep(2000);
             }
         } catch (InterruptedException ex) {
 

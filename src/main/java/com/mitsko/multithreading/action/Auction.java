@@ -7,10 +7,13 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Auction {
     private final static Logger logger = LogManager.getLogger(Auction.class);
-    private final static Auction instance = new Auction();
+    private static Auction instance;
+
+    private static ReentrantLock lock = new ReentrantLock();
 
     private List<Lot> lots;
     private int index;
@@ -23,6 +26,13 @@ public class Auction {
     }
 
     public static Auction getInstance() {
+        if (instance == null) {
+            lock.lock();
+            if (instance == null) {
+                instance = new Auction();
+            }
+            lock.unlock();
+        }
         return instance;
     }
 
@@ -31,27 +41,35 @@ public class Auction {
     }
 
     public int getIndex() {
-        return index;
+        int local;
+        lock.lock();
+        local = index;
+        lock.unlock();
+        return local;
     }
 
     public Lot getLot(int index) {
-        return lots.get(index);
+        Lot temp;
+        lock.lock();
+        temp = lots.get(index);
+        lock.unlock();
+        return temp;
     }
 
     public void setCount(int count) {
-        this.count.set(count);
+        this.count.getAndSet(count);
     }
 
     public int size() {
-        return lots.size();
+        int temp;
+        lock.lock();
+        temp = lots.size();
+        lock.unlock();
+        return temp;
     }
 
     public int getCount() {
         return count.get();
-    }
-
-    public void setIndex(int index) {
-        this.index = index;
     }
 
     public void start() {
@@ -59,11 +77,17 @@ public class Auction {
             while (lots.size() != index) {
                 Thread.sleep(1000);
                 if (count.get() == 3) {
-                    index += 1;
+                    lock.lock();
                     count.set(0);
-                    logger.info("Sales " + lots.get(index - 1).getCurrentPrice());
+                    if (lots.get(index).getCurrentPrice() == lots.get(index).getStartingPrice()) {
+                        logger.info("Not sales " + lots.get(index).getDescription());
+                    } else {
+                        logger.info("Sales " + lots.get(index).getDescription() + " " + lots.get(index).getCurrentPrice());
+                    }
+                    index += 1;
+                    lock.unlock();
                 } else {
-                    count.set(count.get() + 1);
+                    count.getAndSet(count.get() + 1);
                     logger.info("Count " + count);
                 }
             }
