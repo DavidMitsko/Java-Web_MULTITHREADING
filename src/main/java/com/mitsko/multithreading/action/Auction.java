@@ -60,12 +60,15 @@ public class Auction {
         this.count.getAndSet(count);
     }
 
-    public int size() {
-        int temp;
+    public boolean isEmpty() {
         lock.lock();
-        temp = lots.size();
-        lock.unlock();
-        return temp;
+        if (lots.size() == index){
+            lock.unlock();
+            return false;
+        } else {
+            lock.unlock();
+            return true;
+        }
     }
 
     public int getCount() {

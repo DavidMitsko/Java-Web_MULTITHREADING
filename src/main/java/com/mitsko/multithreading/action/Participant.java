@@ -22,9 +22,8 @@ public class Participant implements Runnable {
     @Override
     public void run() {
         logger.info("Create participant " + this);
-        int size = auction.size();
         try {
-            while (size != auction.getIndex()) {
+            while (auction.isEmpty()) {
                 lot = auction.getLot(auction.getIndex());
                 if (random()) {
                     makeBet();
